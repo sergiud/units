@@ -668,8 +668,8 @@ struct autoprefix_norm_impl;
 template<class T>
 struct autoprefix_norm_impl<T, true>
 {
-    typedef double type;
-    static double call(const T& arg) { return std::abs(arg); }
+    typedef T type;
+    static T call(const T& arg) { using std::abs; return abs(arg); }
 };
 
 template<class T>
@@ -690,13 +690,13 @@ typename autoprefix_norm_impl<T>::type autoprefix_norm(const T& arg)
 namespace detail {
 
 template<class End, class Prev, class T, class F>
-bool find_matching_scale_impl(End, End, Prev, T, double, F)
+bool find_matching_scale_impl(End, End, Prev, T, T, F)
 {
     return false;
 }
 
 template<class Begin, class End, class Prev, class T, class F>
-bool find_matching_scale_impl(Begin, End end, Prev prev, T t, double x, F f)
+bool find_matching_scale_impl(Begin, End end, Prev prev, T t, T x, F f)
 {
     if(Begin::item::value() > x) {
         f(prev, t);
@@ -714,13 +714,13 @@ bool find_matching_scale_impl(Begin, End end, Prev prev, T t, double x, F f)
 }
 
 template<class End, class T, class F>
-bool find_matching_scale_i(End, End, T, double, F)
+bool find_matching_scale_i(End, End, T, T, F)
 {
     return false;
 }
 
 template<class Begin, class End, class T, class F>
-bool find_matching_scale_i(Begin, End end, T t, double x, F f)
+bool find_matching_scale_i(Begin, End end, T t, T x, F f)
 {
     if(Begin::item::value() > x) {
         return false;
@@ -730,7 +730,7 @@ bool find_matching_scale_i(Begin, End end, T t, double x, F f)
 }
 
 template<class Scales, class T, class F>
-bool find_matching_scale(T t, double x, F f)
+bool find_matching_scale(T t, T x, F f)
 {
     return detail::find_matching_scale_i(Scales(), dimensionless_type(), t, x, f);
 }
@@ -976,7 +976,8 @@ void maybe_print_prefixed(std::basic_ostream<CharT, Traits>& os, const quantity<
     detail::print_default(os, q)();
 }
 
-inline mpl::true_ test_norm(double) { return mpl::true_(); }
+template<class T>
+inline mpl::true_ test_norm(T, typename disable_if<is_same<T, one> >::type* = NULL) { return mpl::true_(); }
 inline mpl::false_ test_norm(one) { return mpl::false_(); }
 
 } // namespace detail
